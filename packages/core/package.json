@@ -51,7 +51,7 @@
   "author": "StealthMark Security Team <security@stealthmark.io>",
   "devDependencies": {
     "typescript": "^5.7.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "publishConfig": {
     "access": "public"
