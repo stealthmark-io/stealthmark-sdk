@@ -237,7 +237,7 @@ export async function runAudit(target: string, options: AuditOptions = {}): Prom
       method: 'GET',
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'StealthMarkCLI/0.1.5 (+https://stealthmark.io)',
+        'User-Agent': 'StealthMarkCLI/0.1.7 (+https://stealthmark.io)',
       },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });

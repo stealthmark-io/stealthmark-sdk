@@ -88,7 +88,13 @@ export default stealthmark({
 
 Both middlewares answer `/.env*` and `/.git/*` themselves, before your middleware and before agent detection, so a `.env` file or `.git` folder left in a deployment is never served. The default, `dotfiles: 'block'`, answers `403` with `Cache-Control: no-store`.
 
-`dotfiles: 'synthetic_fixture'` is opt-in. Those paths then answer `200` with a short plain-text file: a first line saying the domain uses `@stealthmark/next`, synthetic values (`NODE_ENV`, `APP_URL`) and a `HEALTHCHECK_URL` pointing to `https://stealthmark.io/api/telemetry/canary?t=<token>`. The token is signed with your organization's Canary key and names the host, path and time it was served. When a scanner or agent later requests that URL, your StealthMark console records an `agent_blocked` event with reason `canary_triggered` (no units consumed); the URL always answers `401` and returns nothing. Serving the fixture makes no network call, and it holds no value from your environment.
+`dotfiles: 'synthetic_fixture'` is opt-in. Those paths then answer `200` with a short plain-text file:
+
+- `/.git/HEAD` answers `ref: refs/heads/main`, since git tools discard a HEAD that is not a ref.
+- `/.git/config` opens with a line saying the domain uses `@stealthmark/next`, and its `origin` remote is `https://stealthmark.io/api/telemetry/canary/<token>.git`. That URL answers `403`, so `git fetch` fails without asking for credentials.
+- Every other path gets the same first line, synthetic values (`NODE_ENV`, `APP_URL`) and a `HEALTHCHECK_URL` pointing to `https://stealthmark.io/api/telemetry/canary?t=<token>`, which answers `401`.
+
+The token is signed with your organization's Canary key and names the host, path and time it was served. When a scanner or agent later requests either Canary URL, your StealthMark console records an `agent_blocked` event with reason `canary_triggered` (no units consumed); the URL returns nothing. Serving the fixture makes no network call, and it holds no value from your environment.
 
 ```typescript
 export default withStealthMark(() => NextResponse.next(), {
@@ -98,7 +104,7 @@ export default withStealthMark(() => NextResponse.next(), {
 });
 ```
 
-Without a valid Canary key (`canaryKey` or the `STEALTHMARK_CANARY_KEY` environment variable) the fixture is never served: the middleware warns once and answers `403`. Trade-off: a `200` on `/.env` can look like an exposed file to scanners that do not read its first line; the StealthMark scan reports it as info.
+Without a valid Canary key (`canaryKey` or the `STEALTHMARK_CANARY_KEY` environment variable) the fixture is never served: the middleware warns once and answers `403`. Trade-off: a `200` on `/.env` or `/.git/HEAD` can look like an exposed file to scanners that do not recognize the fixture; the StealthMark scan reports both as info.
 
 ## Usage metering with StealthMark Cloud (optional)
 

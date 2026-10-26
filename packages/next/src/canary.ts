@@ -62,15 +62,48 @@ export async function mintCanaryToken(signer: CanarySigner, host: string, path: 
   return `${payload}.${base64UrlEncode(new Uint8Array(await signer.sign(payload)))}`;
 }
 
+/**
+ * `/.git/HEAD` answers a plain ref, since git tools discard a HEAD that is not one; `/.git/config` carries the Canary URL
+ * and every other dotfile path gets the env fixture.
+ */
+export async function canaryFixtureFor(signer: CanarySigner, host: string, path: string): Promise<string> {
+  if (path === '/.git/HEAD') return 'ref: refs/heads/main\n';
+  const token = await mintCanaryToken(signer, host, path);
+  return path === '/.git/config' ? canaryGitConfigBody(host, token) : canaryFixtureBody(host, token);
+}
+
 /** The first line discloses the fixture; the values are synthetic and carry no instruction for agents. */
 export function canaryFixtureBody(host: string, token: string): string {
   return [
-    `# Este dominio usa @stealthmark/next · ${SCAN_URL}?domain=${encodeURIComponent(host)}`,
+    disclosureLine(host),
     'NODE_ENV=production',
     `APP_URL=https://${host}`,
     `HEALTHCHECK_URL=${CANARY_ENDPOINT}?t=${token}`,
     '',
   ].join('\n');
+}
+
+/** The token goes in the remote's path: git appends `/info/refs?service=...` to the URL, which would alter a query. */
+export function canaryGitConfigBody(host: string, token: string): string {
+  return [
+    disclosureLine(host),
+    '[core]',
+    '\trepositoryformatversion = 0',
+    '\tfilemode = true',
+    '\tbare = false',
+    '\tlogallrefupdates = true',
+    '[remote "origin"]',
+    `\turl = ${CANARY_ENDPOINT}/${token}.git`,
+    '\tfetch = +refs/heads/*:refs/remotes/origin/*',
+    '[branch "main"]',
+    '\tremote = origin',
+    '\tmerge = refs/heads/main',
+    '',
+  ].join('\n');
+}
+
+function disclosureLine(host: string): string {
+  return `# Este dominio usa @stealthmark/next · ${SCAN_URL}?domain=${encodeURIComponent(host)}`;
 }
 
 function base64UrlEncode(bytes: Uint8Array): string {

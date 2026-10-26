@@ -1,6 +1,6 @@
 {
   "name": "@stealthmark/next",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Next.js middleware that detects self-identified AI agents, serves an agent manifest and meters agent traffic",
   "license": "Apache-2.0",
   "type": "module",
@@ -41,7 +41,7 @@
     "next": ">=15"
   },
   "dependencies": {
-    "@stealthmark/core": "^0.1.5"
+    "@stealthmark/core": "^0.1.7"
   },
   "devDependencies": {
     "next": "^16.3.0",
@@ -57,7 +57,7 @@
     "node": ">=20"
   },
   "bugs": {
-    "url": "https://stealthmark.io/security"
+    "url": "https://github.com/stealthmark-io/stealthmark-sdk/issues"
   },
   "author": "StealthMark Security Team <security@stealthmark.io>",
   "publishConfig": {

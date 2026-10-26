@@ -21,7 +21,7 @@
 
 import { buildEventMetadata, createStealthMark, resolveAgentIdentifier, resolveRequestHost } from '@stealthmark/core';
 import type { DetectionResult, StealthMarkConfig, StealthMarkInstance } from '@stealthmark/core';
-import { canaryFixtureBody, createCanarySigner, isDotfilePath, mintCanaryToken } from './canary.js';
+import { canaryFixtureFor, createCanarySigner, isDotfilePath } from './canary.js';
 import type { CanarySigner, DotfilePolicy } from './canary.js';
 
 /** StealthMark SDK configuration plus the Next.js-only dotfile policy. */
@@ -298,7 +298,7 @@ async function answerDotfile(
     applyHeaders(response, sm.responseHeaders);
     return response;
   }
-  return new Response(canaryFixtureBody(host, await mintCanaryToken(canary, host, pathname)), {
+  return new Response(await canaryFixtureFor(canary, host, pathname), {
     status: 200,
     headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' },
   });

@@ -530,6 +530,13 @@ describe('dotfile policy', () => {
     return token;
   }
 
+  function gitRemoteToken(body: string): string {
+    const url = body.split('\n').find((line) => line.startsWith('\turl = '));
+    const token = url?.slice('\turl = '.length).match(/^https:\/\/stealthmark\.io\/api\/telemetry\/canary\/([^/?]+)\.git$/)?.[1];
+    if (!token) throw new Error('git config has no Canary remote');
+    return token;
+  }
+
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{}')));
   });
@@ -591,11 +598,46 @@ describe('dotfile policy', () => {
     expect(claims.nonce).toMatch(/^[A-Za-z0-9_-]{16}$/);
   });
 
+  it('answers /.git/HEAD with a plain ref and points the origin remote of /.git/config at the Canary URL', async () => {
+    const mw = stealthmark({ siteName: 'Shop', dotfiles: 'synthetic_fixture', canaryKey });
+    const head = expectResponse(await mw(request('/.git/HEAD')));
+    expect(head.status).toBe(200);
+    expect(await head.text()).toBe('ref: refs/heads/main\n');
+
+    const response = expectResponse(await mw(request('/.git/config')));
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    const body = await response.text();
+    const token = gitRemoteToken(body);
+    expect(body).toBe(
+      [
+        '# Este dominio usa @stealthmark/next · https://stealthmark.io/scan?domain=shop.example.com',
+        '[core]',
+        '\trepositoryformatversion = 0',
+        '\tfilemode = true',
+        '\tbare = false',
+        '\tlogallrefupdates = true',
+        '[remote "origin"]',
+        `\turl = https://stealthmark.io/api/telemetry/canary/${token}.git`,
+        '\tfetch = +refs/heads/*:refs/remotes/origin/*',
+        '[branch "main"]',
+        '\tremote = origin',
+        '\tmerge = refs/heads/main',
+        '',
+      ].join('\n')
+    );
+
+    const [payload, signature] = token.split('.');
+    expect(createHmac('sha256', secret).update(payload).digest('base64url')).toBe(signature);
+    const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as Record<string, unknown>;
+    expect(claims).toMatchObject({ v: 1, kid: KID, org: ORG, host: 'shop.example.com', path: '/.git/config' });
+  });
+
   it('mints a fresh token per request and reads STEALTHMARK_CANARY_KEY', async () => {
     vi.stubEnv('STEALTHMARK_CANARY_KEY', canaryKey);
     const mw = withStealthMark(() => new Response('app'), { siteName: 'Shop', dotfiles: 'synthetic_fixture' });
-    const first = canaryToken(await expectResponse(await mw(request('/.git/config'))).text());
-    const second = canaryToken(await expectResponse(await mw(request('/.git/config'))).text());
+    const first = gitRemoteToken(await expectResponse(await mw(request('/.git/config'))).text());
+    const second = gitRemoteToken(await expectResponse(await mw(request('/.git/config'))).text());
     expect(first).not.toBe(second);
   });
 

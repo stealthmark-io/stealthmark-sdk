@@ -9,7 +9,7 @@ import { runInit } from './commands/init.js';
 import { runVerify } from './commands/verify.js';
 import { runAudit } from './commands/audit.js';
 
-const VERSION = '0.1.5';
+const VERSION = '0.1.7';
 
 function printHelp() {
   console.log(`

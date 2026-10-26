@@ -1,6 +1,6 @@
 {
   "name": "@stealthmark/express",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Express and Fastify middleware that detects self-identified AI agents, serves an agent manifest and meters agent traffic",
   "license": "Apache-2.0",
   "type": "module",
@@ -45,7 +45,7 @@
   },
   "author": "StealthMark Security Team <security@stealthmark.io>",
   "dependencies": {
-    "@stealthmark/core": "^0.1.5"
+    "@stealthmark/core": "^0.1.7"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
@@ -53,7 +53,7 @@
     "vitest": "^4.1.11"
   },
   "bugs": {
-    "url": "https://stealthmark.io/security"
+    "url": "https://github.com/stealthmark-io/stealthmark-sdk/issues"
   },
   "publishConfig": {
     "access": "public"

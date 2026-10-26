@@ -1,6 +1,6 @@
 {
   "name": "@stealthmark/cli",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "CLI that scaffolds StealthMark middleware, checks agent manifests, and runs passive AI-readiness audits",
   "license": "Apache-2.0",
   "type": "module",
@@ -38,7 +38,7 @@
   },
   "author": "StealthMark Security Team <security@stealthmark.io>",
   "dependencies": {
-    "@stealthmark/core": "^0.1.5"
+    "@stealthmark/core": "^0.1.7"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -46,7 +46,7 @@
     "vitest": "^4.1.11"
   },
   "bugs": {
-    "url": "https://stealthmark.io/security"
+    "url": "https://github.com/stealthmark-io/stealthmark-sdk/issues"
   },
   "publishConfig": {
     "access": "public"

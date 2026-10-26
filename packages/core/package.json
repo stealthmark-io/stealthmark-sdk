@@ -1,6 +1,6 @@
 {
   "name": "@stealthmark/core",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Framework-agnostic engine that detects self-identified AI agents, generates an agent manifest and meters agent traffic",
   "license": "Apache-2.0",
   "type": "module",
@@ -46,7 +46,7 @@
     "node": ">=20"
   },
   "bugs": {
-    "url": "https://stealthmark.io/security"
+    "url": "https://github.com/stealthmark-io/stealthmark-sdk/issues"
   },
   "author": "StealthMark Security Team <security@stealthmark.io>",
   "devDependencies": {
