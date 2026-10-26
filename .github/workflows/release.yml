@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Check that the tag matches every package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const tag = process.env.TAG;
+            const dirs = ["core", "express", "next", "cli"];
+            let ok = true;
+            for (const dir of dirs) {
+              const pkg = JSON.parse(readFileSync(`packages/${dir}/package.json`, "utf8"));
+              if (`v${pkg.version}` !== tag) {
+                console.error(`${pkg.name} is at ${pkg.version} but the tag is ${tag}`);
+                ok = false;
+              }
+              if (pkg.version.includes("-")) {
+                console.error(`${pkg.name} ${pkg.version} is a prerelease; this workflow publishes stable versions only`);
+                ok = false;
+              }
+            }
+            process.exit(ok ? 0 : 1);
+          '
+
+      - name: Publish @stealthmark/core
+        run: npm publish --access public -w @stealthmark/core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @stealthmark/express
+        run: npm publish --access public -w @stealthmark/express
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @stealthmark/next
+        run: npm publish --access public -w @stealthmark/next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @stealthmark/cli
+        run: npm publish --access public -w @stealthmark/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

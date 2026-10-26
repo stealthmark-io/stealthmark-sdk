@@ -1,0 +1,61 @@
+{
+  "name": "@stealthmark/express",
+  "version": "0.1.6",
+  "description": "Express and Fastify middleware that detects self-identified AI agents, serves an agent manifest and meters agent traffic",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "dev": "tsc --project tsconfig.build.json --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo"
+  },
+  "keywords": [
+    "express",
+    "fastify",
+    "middleware",
+    "ai-agents",
+    "agent-manifest",
+    "stealthmark"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stealthmark-io/stealthmark-sdk.git"
+  },
+  "homepage": "https://stealthmark.io",
+  "engines": {
+    "node": ">=20"
+  },
+  "author": "StealthMark Security Team <security@stealthmark.io>",
+  "dependencies": {
+    "@stealthmark/core": "^0.1.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.11"
+  },
+  "bugs": {
+    "url": "https://stealthmark.io/security"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

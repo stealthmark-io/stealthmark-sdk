@@ -1,0 +1,27 @@
+{
+  "name": "stealthmark-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source SDK (Apache-2.0) that detects self-identified AI agents, serves an agent manifest and meters agent traffic: core, Next.js, Express/Fastify and CLI",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @stealthmark/core && npm run build -w @stealthmark/next -w @stealthmark/express -w @stealthmark/cli",
+    "typecheck": "npm run build -w @stealthmark/core && npm run typecheck --workspaces --if-present",
+    "test": "npm run build -w @stealthmark/core && npm test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stealthmark-io/stealthmark-sdk.git"
+  },
+  "bugs": {
+    "url": "https://stealthmark.io/security"
+  },
+  "homepage": "https://stealthmark.io",
+  "engines": {
+    "node": ">=20"
+  }
+}

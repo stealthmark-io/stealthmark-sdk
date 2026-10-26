@@ -1,0 +1,54 @@
+{
+  "name": "@stealthmark/cli",
+  "version": "0.1.6",
+  "description": "CLI that scaffolds StealthMark middleware, checks agent manifests, and runs passive AI-readiness audits",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "stealthmark": "./dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json && chmod +x dist/bin.js",
+    "dev": "tsc --project tsconfig.build.json --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo"
+  },
+  "keywords": [
+    "stealthmark",
+    "cli",
+    "ai-agents",
+    "agent-manifest",
+    "scaffold"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stealthmark-io/stealthmark-sdk.git"
+  },
+  "homepage": "https://stealthmark.io",
+  "engines": {
+    "node": ">=20"
+  },
+  "author": "StealthMark Security Team <security@stealthmark.io>",
+  "dependencies": {
+    "@stealthmark/core": "^0.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.11"
+  },
+  "bugs": {
+    "url": "https://stealthmark.io/security"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

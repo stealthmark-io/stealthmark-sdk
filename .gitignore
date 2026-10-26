@@ -1,0 +1,10 @@
+node_modules
+dist
+*.tgz
+*.tsbuildinfo
+.env*
+.DS_Store
+.turbo
+
+# Graphify (grafo local, se regenera)
+graphify-out/

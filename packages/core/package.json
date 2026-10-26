@@ -1,0 +1,59 @@
+{
+  "name": "@stealthmark/core",
+  "version": "0.1.6",
+  "description": "Framework-agnostic engine that detects self-identified AI agents, generates an agent manifest and meters agent traffic",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json",
+    "dev": "tsc --project tsconfig.build.json --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.build.tsbuildinfo"
+  },
+  "keywords": [
+    "ai-agents",
+    "agent-manifest",
+    "crawler-detection",
+    "user-agent",
+    "middleware",
+    "usage-metering",
+    "stealthmark"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stealthmark-io/stealthmark-sdk.git"
+  },
+  "homepage": "https://stealthmark.io",
+  "engines": {
+    "node": ">=20"
+  },
+  "bugs": {
+    "url": "https://stealthmark.io/security"
+  },
+  "author": "StealthMark Security Team <security@stealthmark.io>",
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.11"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
