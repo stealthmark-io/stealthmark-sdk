@@ -53,7 +53,7 @@ export interface AuditResult {
   error?: string;
 }
 
-export const DEFAULT_GATEWAY_URL = 'https://stealthmark-gateway-cifepjj5ca-uc.a.run.app';
+export const DEFAULT_GATEWAY_URL = 'https://gateway.stealthmark.io';
 const REQUEST_TIMEOUT_MS = 25_000;
 
 export const SECTION_METADATA: Record<string, { title: string; desc: string }> = {

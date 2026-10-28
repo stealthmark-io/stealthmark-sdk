@@ -137,6 +137,23 @@ describe('@stealthmark/cli — audit command', () => {
       );
     });
 
+    it('uses the public gateway when no gateway option or env var is set', async () => {
+      vi.stubEnv('STEALTHMARK_GATEWAY_URL', undefined);
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => sampleReport,
+      } as Response);
+
+      await runAudit('example.com', { noColor: true });
+      vi.unstubAllEnvs();
+
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        'https://gateway.stealthmark.io/api/v2/audit?domain=example.com',
+        expect.objectContaining({ method: 'GET' })
+      );
+    });
+
     it('returns valid JSON when --json option is passed', async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
