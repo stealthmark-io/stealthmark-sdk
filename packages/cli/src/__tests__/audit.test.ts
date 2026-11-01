@@ -82,6 +82,43 @@ describe('@stealthmark/cli — audit command', () => {
       expect(colored).toContain('\x1b[');
       expect(colored).toContain('example.com');
     });
+
+    const hostileSiteText = {
+      domain: 'evil\x1b]0;pwned\x07.example',
+      title: 'Title \x1b[2J\x1b[Hcleared\x9b31m',
+      detail: 'Found\r\n  ✓ PASS   Forged check\x08\x08\x08\x08\x08\x08\x08\x08\ttabbed',
+      recommendation: 'Add \u202eevil\u2069 \u2066x\u2069\u061c\u200f\u200e record\x7f\x00\x85',
+      limitation: 'Note\x1b[1;31m red \x9d8;;http://evil\x07link',
+    };
+    const reportWithSiteText = (text: typeof hostileSiteText): AuditReport => ({
+      ...sampleReport,
+      domain: text.domain,
+      sections: {
+        ...sampleReport.sections,
+        dns: [{ id: 'caa_record', title: text.title, status: 'warn', detail: text.detail, recommendation: text.recommendation }],
+      },
+      limitations: [text.limitation],
+    });
+    const unsafeInTerminal = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/;
+
+    it('drops control and bidi characters from the audited site’s text, so it cannot restyle, move or forge lines of the report', () => {
+      const output = formatTerminalReport(reportWithSiteText(hostileSiteText), false);
+      expect(output).toContain('Target domain: evil]0;pwned.example\n');
+      expect(output).toContain('Title [2J[Hcleared31m\n');
+      expect(output).toContain('         Found   ✓ PASS   Forged check tabbed\n');
+      expect(output).toContain('         ↳ Recommendation: Add evil x record\n');
+      expect(output).toContain('  • Note[1;31m red 8;;http://evillink\n');
+      expect(output).not.toMatch(unsafeInTerminal);
+      const benign = reportWithSiteText({ domain: 'a.example', title: 't', detail: 'd', recommendation: 'r', limitation: 'l' });
+      expect(output.split('\n')).toHaveLength(formatTerminalReport(benign, false).split('\n').length);
+    });
+
+    it('keeps the CLI’s own colors around the cleaned site text', () => {
+      const colored = formatTerminalReport(reportWithSiteText(hostileSiteText), true);
+      expect(colored).toContain('\x1b[1mTitle [2J[Hcleared31m\x1b[0m');
+      expect(colored).toContain('\x1b[2mFound   ✓ PASS   Forged check tabbed\x1b[0m');
+      expect(colored.replace(/\x1b\[\d+m/g, '')).not.toMatch(unsafeInTerminal);
+    });
   });
 
   describe('formatMarkdownReport', () => {
