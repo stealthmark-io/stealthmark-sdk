@@ -1,0 +1,25 @@
+{
+  "schema": "https://dominionobservatory.com/schemas/mcp-baseline-v1.json",
+  "endpoint": "https://stealthmark.io/api/mcp",
+  "version": "5.1.1",
+  "verified_by": "Dominion Observatory (@vdineshk)",
+  "reference_issue": "https://github.com/stealthmark-io/stealthmark-sdk/issues/3",
+  "tools_count": 6,
+  "tools_sha256": "9dba20972b6795a4d26942c72bef33d184bdb51829705de1a6005423b4f00fca",
+  "advisories": [
+    {
+      "target": "PrimeIntellect-ai/prime-agent",
+      "cwe": [
+        "CWE-863",
+        "CWE-532"
+      ],
+      "discussion": "https://github.com/PrimeIntellect-ai/prime-agent/discussions/3887",
+      "pull_request": "https://github.com/PrimeIntellect-ai/prime-agent/pull/3886"
+    },
+    {
+      "target": "affaan-m/ECC",
+      "title": "OWASP 2025 Web-Perimeter Audit Skill",
+      "pull_request": "https://github.com/affaan-m/ECC/pull/3747"
+    }
+  ]
+}
