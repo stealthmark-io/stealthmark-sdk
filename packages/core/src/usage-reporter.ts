@@ -23,6 +23,7 @@ const DEFAULT_RETRY_AFTER_SECONDS = 300;
 const DEFAULT_RATE_LIMIT_RETRY_SECONDS = 60;
 const MAX_RATE_LIMIT_RETRY_SECONDS = 300;
 const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_RESPONSE_BYTES = 64 * 1024;
 const MAX_IDENTIFIER_LENGTH = 256;
 
 export interface UsageReporter {
@@ -61,9 +62,34 @@ function numberField(body: Record<string, unknown>, key: string): number | undef
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined;
 }
 
+/**
+ * Reads the answer up to MAX_RESPONSE_BYTES; a longer one is cancelled and reads as null. A body that is not a Web
+ * stream, from a fetch polyfill, is read whole as before.
+ */
+async function readCappedText(response: Response): Promise<string | null> {
+  const stream = response.body;
+  if (!stream || typeof stream.getReader !== 'function') return response.text();
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let received = 0;
+  let text = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) return text + decoder.decode();
+    received += value.byteLength;
+    if (received > MAX_RESPONSE_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+}
+
 async function readJsonObject(response: Response): Promise<Record<string, unknown>> {
   try {
-    const parsed: unknown = await response.json();
+    const text = await readCappedText(response);
+    if (text === null) return {};
+    const parsed: unknown = JSON.parse(text);
     return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
       ? (parsed as Record<string, unknown>)
       : {};

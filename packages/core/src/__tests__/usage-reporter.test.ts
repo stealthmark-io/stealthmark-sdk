@@ -156,6 +156,29 @@ describe('createUsageReporter', () => {
     expect(reporter.stats()).toMatchObject({ sent: 2, dropped: 1 });
   });
 
+  it('stops reading an answer past 64 KB and counts the batch as accepted', async () => {
+    const encoder = new TextEncoder();
+    let pulls = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls += 1;
+        if (pulls === 1) controller.enqueue(encoder.encode('{"accepted":0,"pad":"'));
+        else if (pulls <= 64) controller.enqueue(encoder.encode('x'.repeat(16 * 1024)));
+        else {
+          controller.enqueue(encoder.encode('"}'));
+          controller.close();
+        }
+      },
+    });
+    fetchMock.mockImplementationOnce(async () => new Response(body, { status: 200 }));
+    const reporter = createUsageReporter({ apiKey: 'k' });
+    reporter.record({});
+    await reporter.flush();
+
+    expect(pulls).toBeLessThan(16);
+    expect(reporter.stats()).toMatchObject({ sent: 1, dropped: 0 });
+  });
+
   it('pauses on 429, drops queued and new events, then resumes after retry_after_seconds', async () => {
     fetchMock.mockImplementationOnce(async () =>
       jsonResponse(429, { error: 'quota_exceeded', accepted: 1, rejected: 1, retry_after_seconds: 60 })
@@ -343,6 +366,20 @@ describe('createUsageReporter', () => {
       expect(reporter.stats()).toMatchObject({ queued: 0, dropped: 1 });
       expect(reporter.stats().pausedUntil).not.toBeNull();
       expect(onQuotaExceeded).toHaveBeenCalledTimes(1);
+    });
+
+    it('reads a 429 answer past 64 KB as a rate limit, without pausing', async () => {
+      const oversized = JSON.stringify({ error: 'quota_exceeded', retry_after_seconds: 60, pad: 'x'.repeat(64 * 1024) });
+      fetchMock.mockImplementationOnce(async () =>
+        new Response(oversized, { status: 429, headers: { 'content-type': 'application/json' } })
+      );
+      const onQuotaExceeded = vi.fn();
+      const reporter = createUsageReporter({ apiKey: 'k', onQuotaExceeded });
+      reporter.record({});
+      await reporter.flush();
+
+      expect(reporter.stats()).toMatchObject({ queued: 1, dropped: 0, pausedUntil: null });
+      expect(onQuotaExceeded).not.toHaveBeenCalled();
     });
   });
 

@@ -174,6 +174,16 @@ export function formatTerminalReport(report: AuditReport, useColor: boolean = tr
   return lines.join('\n');
 }
 
+/** Site text in a Markdown line: line breaks (U+2028 and U+2029 included, which end a heading or table row in marked) become spaces, trailing whitespace is dropped, since marked trims it off a list's last item and reads it as a new block, inline markup characters are escaped, and `<` and `~` become entities, since a GFM autolink would swallow the backslash before them and some renderers close a strikethrough at an escaped `~`. */
+function markdownText(text: string): string {
+  return text.replace(/[\r\n\u2028\u2029]+/g, ' ').trimEnd().replace(/[\\`*_[\]]/g, '\\$&').replace(/</g, '&lt;').replace(/~/g, '&#126;');
+}
+
+/** A heading also ends at a closing run of #, so a title that ends in one keeps it escaped. */
+function markdownHeadingText(text: string): string {
+  return markdownText(text).replace(/(^|\s)(#+)(?=\s*$)/, '$1\\$2');
+}
+
 export function formatMarkdownReport(report: AuditReport): string {
   const { domain, audited_at, summary, sections, limitations } = report;
   const dateFormatted = new Date(audited_at).toUTCString();
@@ -199,10 +209,10 @@ export function formatMarkdownReport(report: AuditReport): string {
     md += `*${meta.desc}*\n\n`;
     for (const item of items) {
       const badge = item.status.toUpperCase();
-      md += `#### [${badge}] ${item.title}\n`;
-      md += `- **Detail**: ${item.detail}\n`;
+      md += `#### [${badge}] ${markdownHeadingText(item.title)}\n`;
+      md += `- **Detail**: ${markdownText(item.detail)}\n`;
       if (item.recommendation) {
-        md += `- **Recommendation**: ${item.recommendation}\n`;
+        md += `- **Recommendation**: ${markdownText(item.recommendation)}\n`;
       }
       md += `\n`;
     }

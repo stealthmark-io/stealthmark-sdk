@@ -92,6 +92,48 @@ describe('@stealthmark/cli — audit command', () => {
       expect(md).toContain('#### [PASS] HTTPS Availability');
       expect(md).toContain('Counts only — no arbitrary 0–100 score assigned.');
     });
+
+    it('escapes the audited site’s title, detail and recommendation, so they cannot add links, markup or lines', () => {
+      const md = formatMarkdownReport({
+        ...sampleReport,
+        sections: {
+          ...sampleReport.sections,
+          headers: [{ id: 'csp_header', title: 'Evil <img src=x> ##', status: 'warn', detail: '[click](https://evil.example)\n# injected *bold* `code` ~~gone~~ _em_ \\', recommendation: 'Add [x](https://evil.example)\n# to _dmarc.example.com' }],
+        },
+      });
+      expect(md).toContain('#### [WARN] Evil &lt;img src=x> \\##\n');
+      expect(md).toContain('- **Detail**: \\[click\\](https://evil.example) # injected \\*bold\\* \\`code\\` &#126;&#126;gone&#126;&#126; \\_em\\_ \\\\\n');
+      expect(md).toContain('- **Recommendation**: Add \\[x\\](https://evil.example) # to \\_dmarc.example.com\n');
+      expect(md.split('\n').some((line) => line.startsWith('# injected'))).toBe(false);
+    });
+
+    it('writes `<` as an entity, turns U+2028 and U+2029 into spaces and drops trailing whitespace, so a GFM autolink, a marked line break or a list’s trimmed tail cannot add markup', () => {
+      const md = formatMarkdownReport({
+        ...sampleReport,
+        sections: {
+          ...sampleReport.sections,
+          headers: [{ id: 'csp_header', title: 'Evil\u2028# injected', status: 'warn', detail: 'http://x/<img src=x onerror=1>', recommendation: 'Fix\u2029# it\t\u00a0' }],
+        },
+      });
+      expect(md).toContain('#### [WARN] Evil # injected\n');
+      expect(md).toContain('- **Detail**: http://x/&lt;img src=x onerror=1>\n');
+      expect(md).toContain('- **Recommendation**: Fix # it\n');
+      expect(md).not.toContain('<img');
+      expect(md).not.toMatch(/[\u2028\u2029]/);
+    });
+
+    it('writes `~` as an entity, so a GFM autolink that swallows the backslash before it cannot open or close a strikethrough', () => {
+      const md = formatMarkdownReport({
+        ...sampleReport,
+        sections: {
+          ...sampleReport.sections,
+          headers: [{ id: 'csp_header', title: 'http://e~. x~y', status: 'warn', detail: 'http://e~( a~b' }],
+        },
+      });
+      expect(md).toContain('#### [WARN] http://e&#126;. x&#126;y\n');
+      expect(md).toContain('- **Detail**: http://e&#126;( a&#126;b\n');
+      expect(md).not.toContain('~');
+    });
   });
 
   describe('runAudit', () => {
