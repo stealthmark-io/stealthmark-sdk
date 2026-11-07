@@ -47,6 +47,9 @@ jobs:
             process.exit(ok ? 0 : 1);
           '
 
+      - name: Install npm 11.21.2 (trusted publishing needs 11.5.1 or later)
+        run: npm install -g npm@11.21.2
+
       - name: Publish @stealthmark/core
         run: npm publish --provenance --access public -w @stealthmark/core
         env:
