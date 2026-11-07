@@ -107,7 +107,7 @@ function scanAppApiDirectory(
           const slug = endpoint
             .replace(/^\/api\/?/, '')
             .replace(/\//g, '-')
-            .replace(/\[([^\]]+)\]/g, '$1') || 'root';
+            .replace(/\[([^[\]]+)\]/g, '$1') || 'root';
 
           const id = `${slug}-${method.toLowerCase()}`;
           const isHitl = hitlKeywords.some((kw) => endpoint.toLowerCase().includes(kw));

@@ -57,6 +57,13 @@ function clampInt(value: number | undefined, fallback: number, min: number, max:
   return Math.min(max, Math.max(min, Math.floor(value)));
 }
 
+/** Strips trailing slashes with a loop: `/\/+$/` backtracks quadratically on long runs of slashes. */
+function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end -= 1;
+  return value.slice(0, end);
+}
+
 function numberField(body: Record<string, unknown>, key: string): number | undefined {
   const value = body[key];
   return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined;
@@ -107,7 +114,7 @@ function requestSignal(): AbortSignal | undefined {
 /** Printable ASCII without spaces: the only characters an API key can carry in an HTTP header. */
 const API_KEY_PATTERN = /^[\x21-\x7e]+$/;
 
-type ApiKeyCheck = { kind: 'missing' } | { kind: 'valid'; key: string } | { kind: 'invalid'; length: number };
+type ApiKeyCheck = { kind: 'missing' } | { kind: 'valid'; key: string } | { kind: 'invalid' };
 
 /**
  * Trims surrounding whitespace (a key pasted with a trailing newline) and rejects keys with control
@@ -117,7 +124,7 @@ type ApiKeyCheck = { kind: 'missing' } | { kind: 'valid'; key: string } | { kind
 export function checkApiKey(apiKey: string | undefined): ApiKeyCheck {
   const key = (apiKey ?? '').trim();
   if (key === '') return { kind: 'missing' };
-  return API_KEY_PATTERN.test(key) ? { kind: 'valid', key } : { kind: 'invalid', length: key.length };
+  return API_KEY_PATTERN.test(key) ? { kind: 'valid', key } : { kind: 'invalid' };
 }
 
 function normalizeEvent(event: UsageEvent): UsageEvent {
@@ -177,12 +184,12 @@ export function createUsageReporter(options: UsageReporterOptions): UsageReporte
   if (keyCheck.kind === 'invalid') {
     warnOnce(
       'invalid-key',
-      `The API key (${keyCheck.length} characters) contains spaces, control or non-ASCII characters, so it cannot be sent in an HTTP header. Usage reporting is off. Set STEALTHMARK_API_KEY again without extra characters.`
+      'The API key contains spaces, control or non-ASCII characters, so it cannot be sent in an HTTP header. Usage reporting is off. Set STEALTHMARK_API_KEY again without extra characters.'
     );
   }
   const apiKey = keyCheck.kind === 'valid' ? keyCheck.key : '';
   const active = apiKey !== '';
-  const url = `${(options.endpoint ?? DEFAULT_USAGE_ENDPOINT).replace(/\/+$/, '')}/v1/usage/ingest`;
+  const url = `${trimTrailingSlashes(options.endpoint ?? DEFAULT_USAGE_ENDPOINT)}/v1/usage/ingest`;
   const flushIntervalMs = clampInt(options.flushIntervalMs, DEFAULT_FLUSH_INTERVAL_MS, 1, 3_600_000);
   const maxBatch = clampInt(options.maxBatch, DEFAULT_MAX_BATCH, 1, MAX_BATCH_LIMIT);
 

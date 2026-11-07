@@ -48,6 +48,15 @@ describe('createUsageReporter', () => {
     expect(reporter.stats()).toMatchObject({ queued: 0, sent: 1, dropped: 0, failures: 0 });
   });
 
+  it('strips every trailing slash from the endpoint', async () => {
+    const reporter = createUsageReporter({ apiKey: 'sk_live_test', endpoint: 'https://api.example.com/base///' });
+    reporter.record({ agent_identifier: 'GPTBot' });
+    await reporter.flush();
+
+    const [url] = fetchMock.mock.calls[0] as [string];
+    expect(url).toBe('https://api.example.com/base/v1/usage/ingest');
+  });
+
   it('normalizes invalid units to 1', async () => {
     const reporter = createUsageReporter({ apiKey: 'k' });
     reporter.record({ units: 0 });
@@ -499,7 +508,7 @@ describe('usage reporter warnings', () => {
     expect(warnings).toEqual([]);
   });
 
-  it('turns reporting off and warns once, without the key, when the key has control characters', async () => {
+  it('turns reporting off and warns once, without the key or its length, when the key has control characters', async () => {
     const reporter = createUsageReporter({ apiKey: 'sk_live_test\u001b[C', logger });
     reporter.record({ agent_identifier: 'GPTBot' });
     await reporter.flush();
@@ -509,6 +518,7 @@ describe('usage reporter warnings', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('cannot be sent in an HTTP header');
     expect(warnings[0]).not.toContain('sk_live_test');
+    expect(warnings[0]).not.toContain(String('sk_live_test\u001b[C'.length));
   });
 
   it('warns once when the API rejects the key, however many batches fail', async () => {

@@ -97,7 +97,10 @@ export function normalizeTargetDomain(target: string): string {
 
   // Remove trailing dots, default port if any, and lowercase
   host = host.split(':')[0] || '';
-  return host.toLowerCase().replace(/\.+$/, '');
+  // A loop, not /\.+$/: that regex backtracks quadratically on long runs of dots.
+  let end = host.length;
+  while (end > 0 && host[end - 1] === '.') end -= 1;
+  return host.slice(0, end).toLowerCase();
 }
 
 /** Site text in a terminal line: line breaks and tabs become spaces, and every other C0 or C1 control character (ESC and CSI U+009B included), DEL and bidi control character is dropped, so the audited site cannot restyle, move or forge lines of the report. */
