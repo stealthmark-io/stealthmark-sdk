@@ -16,3 +16,13 @@ export {
   type AuditOptions,
   type AuditResult,
 } from './commands/audit.js';
+export {
+  runSkillAudit,
+  formatSkillAuditTerminal,
+  formatSkillAuditMarkdown,
+  type SkillSeverity,
+  type SkillAuditFinding,
+  type SkillAuditReport,
+  type SkillAuditOptions,
+  type SkillAuditResult,
+} from './commands/skill-audit.js';

@@ -8,8 +8,10 @@
 import { runInit } from './commands/init.js';
 import { runVerify } from './commands/verify.js';
 import { runAudit } from './commands/audit.js';
+import { runSkillAudit } from './commands/skill-audit.js';
+import { runLocalDoctorV5, runPdfInspector } from './commands/doctor-v5.js';
 
-const VERSION = '0.1.7';
+const VERSION = '5.1.0';
 
 function printHelp() {
   console.log(`
@@ -23,6 +25,9 @@ Commands:
   init [options]       Write a starter StealthMark middleware file (Next.js, Express or Fastify)
   verify <url>         Check whether a site serves a StealthMark agent manifest
   audit <domain>       Run a passive web & AI-surface readiness audit against a domain
+  skill-audit <path>   Audit local agent skill(s) for supply-chain, hooks, and injection risks (alias: audit-skill)
+  doctor               Audit local workstation/server for Node2Shell, SUID PrivEsc, Docker & Supply-Chain IOCs
+  pdf-check <file.pdf> Scan a PDF resume/invoice for /JavaScript, /Launch, /OpenAction & AI prompt injections
   --version, -v        Show version
   --help, -h           Show this help message
 
@@ -36,11 +41,20 @@ Options (for audit):
   --no-color           Disable terminal ANSI colors
   --gateway <url>      Custom StealthMark Gateway URL
 
+Options (for skill-audit):
+  --json               Output raw JSON report
+  --markdown           Output formatted Markdown report
+  --no-color           Disable terminal ANSI colors
+  --no-spector         Disable SkillSpector bridge
+  --spector            Force SkillSpector bridge execution
+
 Examples:
   stealthmark init
   stealthmark verify https://your-site.example
   stealthmark audit example.com
   stealthmark audit example.com --markdown
+  stealthmark skill-audit ./my-skill
+  stealthmark skill-audit ./skills-dir --markdown
 `);
 }
 
@@ -135,6 +149,48 @@ async function main() {
     } else {
       process.exit(1);
     }
+  }
+
+  if (command === 'skill-audit' || command === 'audit-skill') {
+    const target = args[1];
+    if (!target || target.startsWith('--')) {
+      console.error('Usage: stealthmark skill-audit <path> [options]');
+      console.error('Example: stealthmark skill-audit ./my-skill --markdown');
+      process.exit(1);
+    }
+
+    const json = args.includes('--json');
+    const markdown = args.includes('--markdown');
+    const noColor = args.includes('--no-color');
+    const noSpector = args.includes('--no-spector');
+    const spector = args.includes('--spector');
+
+    const result = await runSkillAudit(target, { json, markdown, noColor, noSpector, spector });
+
+    if (result.output) {
+      console.log(result.output);
+    }
+
+    if (result.success) {
+      process.exit(0);
+    } else {
+      process.exit(1);
+    }
+  }
+
+  if (command === 'doctor') {
+    await runLocalDoctorV5();
+    process.exit(0);
+  }
+
+  if (command === 'pdf-check') {
+    const file = args[1];
+    if (!file) {
+      console.error('Usage: stealthmark pdf-check <file.pdf>');
+      process.exit(1);
+    }
+    await runPdfInspector(file);
+    process.exit(0);
   }
 
   console.error(`Unknown command: ${command}`);
