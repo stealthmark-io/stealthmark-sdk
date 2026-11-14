@@ -48,6 +48,17 @@ describe('Route Auto-Discovery Engine', () => {
     expect(postCap?.id).toBe('search-post');
   });
 
+  it('drops the brackets of dynamic segments from the id', () => {
+    const apiDir = path.join(tempDir, 'app', 'api', 'users', '[id]');
+    fs.mkdirSync(apiDir, { recursive: true });
+    fs.writeFileSync(path.join(apiDir, 'route.ts'), 'export async function GET() { return new Response("ok"); }');
+
+    const caps = discoverCapabilities({ rootDir: tempDir });
+    expect(caps).toHaveLength(1);
+    expect(caps[0].endpoint).toBe('/api/users/[id]');
+    expect(caps[0].id).toBe('users-id-get');
+  });
+
   it('flags routes as HITL only when hitlKeywords is passed', () => {
     const checkoutDir = path.join(tempDir, 'src', 'app', 'api', 'checkout');
     fs.mkdirSync(checkoutDir, { recursive: true });

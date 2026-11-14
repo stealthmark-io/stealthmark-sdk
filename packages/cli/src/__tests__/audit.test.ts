@@ -59,6 +59,12 @@ describe('@stealthmark/cli — audit command', () => {
       expect(normalizeTargetDomain('  example.com.  ')).toBe('example.com');
     });
 
+    it('strips only the trailing run of dots, however long', () => {
+      expect(normalizeTargetDomain(`Example.COM${'.'.repeat(10_000)}`)).toBe('example.com');
+      expect(normalizeTargetDomain('a..b.')).toBe('a..b');
+      expect(normalizeTargetDomain('...')).toBe('');
+    });
+
     it('returns empty string on empty input', () => {
       expect(normalizeTargetDomain('')).toBe('');
       expect(normalizeTargetDomain('   ')).toBe('');
